@@ -5,59 +5,62 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Card } from '../components/ui/Card';
+import { useAuth } from '../contexts/AuthContext';
+
 export function RegisterPage() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate('/dashboard');
-    }, 1500);
+  const { register, isLoading, error, clearError } = useAuth();
+
+  const [formData, setFormData] = useState({
+    full_name: '',
+    farm_name: '',
+    email: '',
+    phone_number: '',
+    location: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearError();
+
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    try {
+      await register({
+        full_name: formData.full_name,
+        email: formData.email,
+        password: formData.password,
+        farm_name: formData.farm_name,
+        phone_number: formData.phone_number,
+        location: formData.location,
+      });
+      navigate('/dashboard');
+    } catch {
+      // Error is handled by auth context
+    }
+  };
+
   const districts = [
-  {
-    value: 'gaborone',
-    label: 'Gaborone'
-  },
-  {
-    value: 'francistown',
-    label: 'Francistown'
-  },
-  {
-    value: 'maun',
-    label: 'Maun'
-  },
-  {
-    value: 'kasane',
-    label: 'Kasane'
-  },
-  {
-    value: 'serowe',
-    label: 'Serowe'
-  },
-  {
-    value: 'palapye',
-    label: 'Palapye'
-  },
-  {
-    value: 'molepolole',
-    label: 'Molepolole'
-  },
-  {
-    value: 'kanye',
-    label: 'Kanye'
-  },
-  {
-    value: 'lobatse',
-    label: 'Lobatse'
-  },
-  {
-    value: 'selebi-phikwe',
-    label: 'Selebi-Phikwe'
-  }];
+    { value: 'gaborone', label: 'Gaborone' },
+    { value: 'francistown', label: 'Francistown' },
+    { value: 'maun', label: 'Maun' },
+    { value: 'kasane', label: 'Kasane' },
+    { value: 'serowe', label: 'Serowe' },
+    { value: 'palapye', label: 'Palapye' },
+    { value: 'molepolole', label: 'Molepolole' },
+    { value: 'kanye', label: 'Kanye' },
+    { value: 'lobatse', label: 'Lobatse' },
+    { value: 'selebi-phikwe', label: 'Selebi-Phikwe' },
+  ];
 
   return (
     <div className="min-h-screen bg-bg-main flex items-center justify-center p-4 py-12">
@@ -76,19 +79,27 @@ export function RegisterPage() {
 
         <Card className="shadow-warm-lg">
           <form onSubmit={handleRegister} className="space-y-5">
+            {error && (
+              <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm border border-red-100">
+                {error}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Input
                 label="Full Name"
                 placeholder="Thabo Mokobi"
                 icon={<User size={18} />}
+                value={formData.full_name}
+                onChange={handleChange('full_name')}
                 required />
-
               <Input
                 label="Farm Name"
                 placeholder="Green Valley Farm"
                 icon={<Leaf size={18} />}
+                value={formData.farm_name}
+                onChange={handleChange('farm_name')}
                 required />
-
             </div>
 
             <Input
@@ -96,17 +107,24 @@ export function RegisterPage() {
               type="email"
               placeholder="you@example.com"
               icon={<Mail size={18} />}
+              value={formData.email}
+              onChange={handleChange('email')}
               required />
-
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Input
                 label="Phone Number"
                 placeholder="+267 71234567"
                 icon={<Phone size={18} />}
+                value={formData.phone_number}
+                onChange={handleChange('phone_number')}
                 required />
-
-              <Select label="Location" options={districts} required />
+              <Select
+                label="Location"
+                options={districts}
+                value={formData.location}
+                onChange={handleChange('location')}
+                required />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -115,15 +133,17 @@ export function RegisterPage() {
                 type="password"
                 placeholder="••••••••"
                 icon={<Lock size={18} />}
+                value={formData.password}
+                onChange={handleChange('password')}
                 required />
-
               <Input
                 label="Confirm Password"
                 type="password"
                 placeholder="••••••••"
                 icon={<Lock size={18} />}
+                value={formData.confirmPassword}
+                onChange={handleChange('confirmPassword')}
                 required />
-
             </div>
 
             <div className="flex items-start pt-2">
@@ -133,11 +153,9 @@ export function RegisterPage() {
                 type="checkbox"
                 className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                 required />
-
               <label
                 htmlFor="terms"
                 className="ml-2 block text-sm text-text-secondary">
-
                 I agree to the{' '}
                 <a href="#" className="text-primary hover:underline">
                   Terms of Service
@@ -154,7 +172,6 @@ export function RegisterPage() {
               className="w-full"
               size="lg"
               isLoading={isLoading}>
-
               Create Account
             </Button>
           </form>
@@ -165,11 +182,10 @@ export function RegisterPage() {
           <Link
             to="/login"
             className="font-medium text-primary hover:text-primary-dark">
-
             Sign in
           </Link>
         </p>
       </div>
-    </div>);
-
+    </div>
+  );
 }
