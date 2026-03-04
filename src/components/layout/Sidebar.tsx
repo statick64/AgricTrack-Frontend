@@ -9,54 +9,62 @@ import {
   GraduationCap,
   LogOut,
   Leaf,
-  X } from
-'lucide-react';
+  X
+} from
+  'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation();
+  const { user } = useAuth();
+
+  const fullName = user ? `${user.first_name} ${user.last_name}` : 'Farmer';
+  const initials = user
+    ? `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase()
+    : 'F';
   const menuItems = [
-  {
-    path: '/dashboard',
-    icon: <LayoutDashboard size={20} />,
-    label: 'Dashboard'
-  },
-  {
-    path: '/livestock',
-    icon: <Beef size={20} />,
-    label: 'Livestock'
-  },
-  {
-    path: '/health',
-    icon: <Stethoscope size={20} />,
-    label: 'Health & Vax'
-  },
-  {
-    path: '/inventory',
-    icon: <Package size={20} />,
-    label: 'Inventory'
-  },
-  {
-    path: '/reports',
-    icon: <FileText size={20} />,
-    label: 'Reports'
-  },
-  {
-    path: '/training',
-    icon: <GraduationCap size={20} />,
-    label: 'Training'
-  }];
+    {
+      path: '/dashboard',
+      icon: <LayoutDashboard size={20} />,
+      label: 'Dashboard'
+    },
+    {
+      path: '/livestock',
+      icon: <Beef size={20} />,
+      label: 'Livestock'
+    },
+    {
+      path: '/health',
+      icon: <Stethoscope size={20} />,
+      label: 'Health & Vax'
+    },
+    {
+      path: '/inventory',
+      icon: <Package size={20} />,
+      label: 'Inventory'
+    },
+    {
+      path: '/reports',
+      icon: <FileText size={20} />,
+      label: 'Reports'
+    },
+    {
+      path: '/training',
+      icon: <GraduationCap size={20} />,
+      label: 'Training'
+    }];
 
   const isActive = (path: string) => location.pathname === path;
   return (
     <>
       {/* Mobile Overlay */}
       {isOpen &&
-      <div
-        className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-        onClick={onClose} />
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose} />
 
       }
 
@@ -90,11 +98,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
             {menuItems.map((item) =>
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => onClose()} // Close on mobile when clicked
-              className={`
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => onClose()} // Close on mobile when clicked
+                className={`
                   flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors
                   ${isActive(item.path) ? 'bg-primary/10 text-primary border-l-4 border-primary' : 'text-text-secondary hover:bg-gray-50 hover:text-text-primary'}
                 `}>
@@ -109,11 +117,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="p-4 border-t border-gray-100">
             <div className="flex items-center gap-3 px-4 py-3 mb-2">
               <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold">
-                TM
+                {initials}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-text-primary truncate">
-                  Thabo Mokobi
+                  {fullName}
                 </p>
                 <p className="text-xs text-text-secondary truncate">
                   Farm Owner
