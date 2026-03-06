@@ -1,10 +1,15 @@
 import React from 'react';
 import { Menu, Bell, Search, ChevronDown } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 interface TopBarProps {
   onMenuClick: () => void;
   title: string;
 }
 export function TopBar({ onMenuClick, title }: TopBarProps) {
+  const { user } = useAuth();
+  const initials = user
+    ? `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase()
+    : 'F';
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 h-16 px-4 lg:px-8 flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -37,7 +42,7 @@ export function TopBar({ onMenuClick, title }: TopBarProps) {
         {/* User Dropdown Trigger */}
         <div className="hidden md:flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded-lg transition-colors">
           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-            TM
+            {initials}
           </div>
           <ChevronDown size={16} className="text-gray-400" />
         </div>
