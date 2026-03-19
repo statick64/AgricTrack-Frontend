@@ -50,36 +50,35 @@ export type LivestockStatus = 'healthy' | 'sick' | 'pregnant' | 'quarantine';
 export interface Livestock {
     id: number;
     tag_id: string;
-    name: string;
-    animal_type: AnimalType;
+    name: string | null;
+    animal_type: string;
     breed: string;
-    gender: Gender;
+    gender: string;
     date_of_birth: string;
     weight: number;
-    status: LivestockStatus;
-    notes: string;
+    status: string;
+    notes: string | null;
     created_at: string;
-    updated_at: string;
     age: number;
 }
 
 export interface LivestockCreate {
     tag_id: string;
-    name?: string;
-    animal_type: AnimalType;
+    name: string | null;
+    animal_type: string;
     breed: string;
-    gender: Gender;
+    gender: string;
     date_of_birth: string;
     weight: number;
-    status?: LivestockStatus;
-    notes?: string;
+    status: string;
+    notes: string | null;
 }
 
 export interface LivestockUpdate {
-    name?: string;
-    weight?: number;
-    status?: LivestockStatus;
-    notes?: string;
+    name: string | null;
+    weight: number | null;
+    status: string | null;
+    notes: string | null;
 }
 
 export interface LivestockStats {

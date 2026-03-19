@@ -19,14 +19,14 @@ export function LivestockPage() {
   // Form state
   const [formData, setFormData] = useState<LivestockCreate>({
     tag_id: '',
-    name: '',
+    name: null,
     animal_type: 'cattle',
     breed: '',
     gender: 'male',
     date_of_birth: '',
     weight: 0,
     status: 'healthy',
-    notes: '',
+    notes: null,
   });
 
   const apiFilterType = filterType === 'All' ? undefined : filterType.toLowerCase();
@@ -49,14 +49,14 @@ export function LivestockPage() {
       setIsAddModalOpen(false);
       setFormData({
         tag_id: '',
-        name: '',
+        name: null,
         animal_type: 'cattle',
         breed: '',
         gender: 'male',
         date_of_birth: '',
         weight: 0,
         status: 'healthy',
-        notes: '',
+        notes: null,
       });
       refetch();
     } catch (err: any) {
@@ -134,8 +134,8 @@ export function LivestockPage() {
               key={type}
               onClick={() => setFilterType(type)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${filterType === type
-                  ? 'bg-primary text-white'
-                  : 'bg-white text-text-secondary hover:bg-gray-50 border border-gray-200'
+                ? 'bg-primary text-white'
+                : 'bg-white text-text-secondary hover:bg-gray-50 border border-gray-200'
                 }`}>
               {type}
             </button>
