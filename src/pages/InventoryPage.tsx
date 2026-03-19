@@ -1,22 +1,68 @@
-
+import React, { useState } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { DataTable } from '../components/ui/DataTable';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
-import { Plus, AlertTriangle } from 'lucide-react';
+import { Modal } from '../components/ui/Modal';
+import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui/Select';
+import { Plus } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import { inventoryService } from '../services/inventoryService';
+import type { InventoryItemCreate } from '../types';
 
 export function InventoryPage() {
-  const { data: inventoryData, isLoading, error } = useApi(
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Form state matching InventoryItemCreate
+  const [formData, setFormData] = useState<InventoryItemCreate>({
+    item_name: '',
+    category: 'feed',
+    quantity: 0,
+    unit: '',
+    min_stock_level: 0,
+    description: '',
+    supplier: '',
+    cost_per_unit: undefined,
+  });
+
+  const { data: inventoryData, isLoading, error, refetch } = useApi(
     () => inventoryService.getAll(),
     []
   );
 
-  const { data: lowStockAlerts } = useApi(
-    () => inventoryService.getLowStockAlerts(),
-    []
-  );
+  const handleFormChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: ['quantity', 'min_stock_level', 'cost_per_unit'].includes(field)
+        ? e.target.value === '' ? undefined : Number(e.target.value)
+        : e.target.value,
+    }));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await inventoryService.create(formData);
+      setIsAddModalOpen(false);
+      setFormData({
+        item_name: '',
+        category: 'feed',
+        quantity: 0,
+        unit: '',
+        min_stock_level: 0,
+        description: '',
+        supplier: '',
+        cost_per_unit: undefined,
+      });
+      refetch();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to add inventory item');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const columns = [
     {
@@ -67,20 +113,15 @@ export function InventoryPage() {
     },
   ];
 
-  const lowStockCount = lowStockAlerts?.count ?? 0;
-
   return (
     <DashboardLayout title="Inventory Management">
       <div className="flex justify-between items-center mb-6">
-        <div className="flex gap-4">
-          {lowStockCount > 0 && (
-            <div className="bg-orange-50 text-orange-800 px-4 py-2 rounded-lg border border-orange-100 flex items-center gap-2 text-sm font-medium">
-              <AlertTriangle size={16} />
-              {lowStockCount} Item{lowStockCount !== 1 ? 's' : ''} Low on Stock
-            </div>
-          )}
-        </div>
-        <Button icon={<Plus size={18} />}>Add Item</Button>
+        <div className="flex gap-4" />
+        <Button
+          onClick={() => setIsAddModalOpen(true)}
+          icon={<Plus size={18} />}>
+          Add Item
+        </Button>
       </div>
 
       {isLoading ? (
@@ -99,6 +140,86 @@ export function InventoryPage() {
           )}
         />
       )}
+
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Add New Inventory Item"
+        actions={
+          <>
+            <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} isLoading={isSaving}>
+              Save Item
+            </Button>
+          </>
+        }>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Item Name"
+            placeholder="e.g. Cattle Feed"
+            value={formData.item_name}
+            onChange={handleFormChange('item_name')}
+          />
+          <Select
+            label="Category"
+            value={formData.category}
+            onChange={handleFormChange('category')}
+            options={[
+              { value: 'feed', label: 'Feed' },
+              { value: 'medicine', label: 'Medicine' },
+              { value: 'equipment', label: 'Equipment' },
+              { value: 'other', label: 'Other' },
+            ]}
+          />
+          <Input
+            label="Quantity"
+            type="number"
+            placeholder="0"
+            value={String(formData.quantity)}
+            onChange={handleFormChange('quantity')}
+          />
+          <Input
+            label="Unit"
+            placeholder="e.g. kg, litres, bags"
+            value={formData.unit}
+            onChange={handleFormChange('unit')}
+          />
+          <Input
+            label="Min Stock Level"
+            type="number"
+            placeholder="0"
+            value={String(formData.min_stock_level)}
+            onChange={handleFormChange('min_stock_level')}
+          />
+          <Input
+            label="Cost Per Unit"
+            type="number"
+            placeholder="0.00"
+            value={formData.cost_per_unit !== undefined ? String(formData.cost_per_unit) : ''}
+            onChange={handleFormChange('cost_per_unit')}
+          />
+          <Input
+            label="Supplier"
+            placeholder="e.g. Farm Supplies Ltd"
+            value={formData.supplier || ''}
+            onChange={handleFormChange('supplier')}
+          />
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Description
+            </label>
+            <textarea
+              className="w-full rounded-lg border border-gray-200 p-3 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+              rows={3}
+              placeholder="Item description..."
+              value={formData.description || ''}
+              onChange={handleFormChange('description')}
+            />
+          </div>
+        </div>
+      </Modal>
     </DashboardLayout>
   );
 }
