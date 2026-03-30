@@ -48,7 +48,7 @@ export type Gender = 'male' | 'female';
 export type LivestockStatus = 'healthy' | 'sick' | 'pregnant' | 'quarantine';
 
 export interface Livestock {
-    id: number;
+    id: string;
     tag_id: string;
     name: string | null;
     animal_type: string;
@@ -94,8 +94,8 @@ export interface LivestockStats {
 export type HealthStatus = 'ongoing' | 'recovered' | 'healthy';
 
 export interface HealthRecord {
-    id: number;
-    animal: number;
+    id: string;
+    animal_id: string;
     date: string;
     condition: string;
     treatment: string;
@@ -108,14 +108,14 @@ export interface HealthRecord {
 }
 
 export interface HealthRecordCreate {
-    animal: number;
+    animal_id: string;
     date: string;
     condition: string;
     treatment: string;
     veterinarian: string;
-    status: HealthStatus;
+    status: string;
     notes?: string;
-    follow_up_date?: string;
+    follow_up_date?: string | null;
 }
 
 // ========================
@@ -125,8 +125,8 @@ export interface HealthRecordCreate {
 export type VaccinationStatus = 'pending' | 'completed' | 'overdue';
 
 export interface VaccinationRecord {
-    id: number;
-    animal: number | null;
+    id: string;
+    animal_id: string | null;
     group_name: string;
     vaccine_name: string;
     scheduled_date: string;
@@ -140,13 +140,13 @@ export interface VaccinationRecord {
 }
 
 export interface VaccinationCreate {
-    animal?: number;
+    animal_id?: string;
     group_name?: string;
     vaccine_name: string;
     scheduled_date: string;
     administered_date?: string;
     administered_by?: string;
-    status?: VaccinationStatus;
+    status?: string;
     batch_number?: string;
     notes?: string;
 }

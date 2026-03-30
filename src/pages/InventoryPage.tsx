@@ -6,14 +6,15 @@ import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
-import { Plus } from 'lucide-react';
+import { Plus, Edit } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import { inventoryService } from '../services/inventoryService';
-import type { InventoryItemCreate } from '../types';
+import type { InventoryItem, InventoryItemCreate } from '../types';
 
 export function InventoryPage() {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
 
   // Form state matching InventoryItemCreate
   const [formData, setFormData] = useState<InventoryItemCreate>({
@@ -32,6 +33,46 @@ export function InventoryPage() {
     []
   );
 
+  const resetForm = () => {
+    setFormData({
+      item_name: '',
+      category: 'feed',
+      quantity: 0,
+      unit: '',
+      min_stock_level: 0,
+      description: '',
+      supplier: '',
+      cost_per_unit: undefined,
+    });
+  };
+
+  const handleOpenAdd = () => {
+    setEditingItem(null);
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (item: InventoryItem) => {
+    setEditingItem(item);
+    setFormData({
+      item_name: item.item_name,
+      category: item.category,
+      quantity: item.quantity,
+      unit: item.unit,
+      min_stock_level: item.min_stock_level,
+      description: item.description || '',
+      supplier: item.supplier || '',
+      cost_per_unit: item.cost_per_unit ?? undefined,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingItem(null);
+    resetForm();
+  };
+
   const handleFormChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({
       ...prev,
@@ -44,21 +85,15 @@ export function InventoryPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await inventoryService.create(formData);
-      setIsAddModalOpen(false);
-      setFormData({
-        item_name: '',
-        category: 'feed',
-        quantity: 0,
-        unit: '',
-        min_stock_level: 0,
-        description: '',
-        supplier: '',
-        cost_per_unit: undefined,
-      });
+      if (editingItem) {
+        await inventoryService.update(editingItem.id, formData);
+      } else {
+        await inventoryService.create(formData);
+      }
+      handleCloseModal();
       refetch();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to add inventory item');
+      alert(err.response?.data?.error || (editingItem ? 'Failed to update inventory item' : 'Failed to add inventory item'));
     } finally {
       setIsSaving(false);
     }
@@ -118,7 +153,7 @@ export function InventoryPage() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-4" />
         <Button
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={handleOpenAdd}
           icon={<Plus size={18} />}>
           Add Item
         </Button>
@@ -133,8 +168,8 @@ export function InventoryPage() {
           data={inventoryData ?? []}
           columns={columns}
           searchPlaceholder="Search inventory..."
-          actions={() => (
-            <Button variant="ghost" size="sm">
+          actions={(item: any) => (
+            <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(item)} icon={<Edit size={16} />}>
               Edit
             </Button>
           )}
@@ -142,16 +177,16 @@ export function InventoryPage() {
       )}
 
       <Modal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Add New Inventory Item"
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item'}
         actions={
           <>
-            <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>
+            <Button variant="ghost" onClick={handleCloseModal}>
               Cancel
             </Button>
             <Button onClick={handleSave} isLoading={isSaving}>
-              Save Item
+              {editingItem ? 'Update Item' : 'Save Item'}
             </Button>
           </>
         }>
