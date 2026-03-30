@@ -191,7 +191,7 @@ export function DashboardPage() {
                     {upcomingVax.map((item) => (
                       <tr key={item.id}>
                         <td className="px-4 py-3 font-medium">
-                          {item.group_name || `Animal #${item.animal}`}
+                          {item.group_name || `Animal ${item.animal_id}`}
                         </td>
                         <td className="px-4 py-3 text-text-secondary">
                           {item.vaccine_name}
