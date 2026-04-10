@@ -6,15 +6,21 @@ import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
-import { Plus, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, QrCode, Download, Printer } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import { livestockService } from '../services/livestockService';
-import type { LivestockCreate } from '../types';
+import type { Livestock, LivestockCreate } from '../types';
 
 export function LivestockPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('All');
   const [isSaving, setIsSaving] = useState(false);
+
+  // QR Code modal state
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [qrLivestockInfo, setQrLivestockInfo] = useState<{ tag_id: string; name: string | null } | null>(null);
+  const [isLoadingQr, setIsLoadingQr] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<LivestockCreate>({
@@ -45,7 +51,7 @@ export function LivestockPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await livestockService.create(formData);
+      const newAnimal = await livestockService.create(formData);
       setIsAddModalOpen(false);
       setFormData({
         tag_id: '',
@@ -59,11 +65,71 @@ export function LivestockPage() {
         notes: null,
       });
       refetch();
+
+      // Automatically generate and show QR code for the new animal
+      fetchAndShowQR(newAnimal.id, newAnimal.tag_id, newAnimal.name);
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to save livestock');
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const fetchAndShowQR = async (id: string, tag_id: string, name: string | null) => {
+    setIsLoadingQr(true);
+    setQrLivestockInfo({ tag_id, name });
+    setIsQrModalOpen(true);
+    try {
+      const url = await livestockService.getQRCode(id);
+      setQrCodeUrl(url);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to generate QR code');
+      setIsQrModalOpen(false);
+    } finally {
+      setIsLoadingQr(false);
+    }
+  };
+
+  const handleViewQR = (animal: Livestock) => {
+    fetchAndShowQR(animal.id, animal.tag_id, animal.name);
+  };
+
+  const handleDownloadQR = () => {
+    if (!qrCodeUrl || !qrLivestockInfo) return;
+    const link = document.createElement('a');
+    link.href = qrCodeUrl;
+    link.download = `QR-${qrLivestockInfo.tag_id}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrintQR = () => {
+    if (!qrCodeUrl) return;
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head><title>QR Code - ${qrLivestockInfo?.tag_id}</title></head>
+          <body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;flex-direction:column;font-family:sans-serif;">
+            <h2 style="margin-bottom:8px;">${qrLivestockInfo?.tag_id}</h2>
+            ${qrLivestockInfo?.name ? `<p style="margin:0 0 16px;color:#666;">${qrLivestockInfo.name}</p>` : ''}
+            <img src="${qrCodeUrl}" style="width:300px;height:300px;" />
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.onload = () => { printWindow.print(); };
+    }
+  };
+
+  const closeQrModal = () => {
+    setIsQrModalOpen(false);
+    if (qrCodeUrl) {
+      URL.revokeObjectURL(qrCodeUrl);
+      setQrCodeUrl(null);
+    }
+    setQrLivestockInfo(null);
   };
 
   const handleDelete = async (id: number) => {
@@ -159,6 +225,12 @@ export function LivestockPage() {
           searchPlaceholder="Search by tag, name, or breed..."
           actions={(item: any) => (
             <div className="flex justify-end gap-2">
+              <button
+                onClick={() => handleViewQR(item)}
+                title="View QR Code"
+                className="p-1 text-gray-400 hover:text-primary transition-colors">
+                <QrCode size={18} />
+              </button>
               <button className="p-1 text-gray-400 hover:text-primary transition-colors">
                 <Eye size={18} />
               </button>
@@ -264,6 +336,63 @@ export function LivestockPage() {
               onChange={handleFormChange('notes')}
             />
           </div>
+        </div>
+      </Modal>
+
+      {/* QR Code Modal */}
+      <Modal
+        isOpen={isQrModalOpen}
+        onClose={closeQrModal}
+        title="Livestock QR Code"
+        maxWidth="sm"
+        actions={
+          <>
+            <Button variant="ghost" onClick={closeQrModal}>
+              Close
+            </Button>
+            <Button
+              variant="outline"
+              icon={<Printer size={18} />}
+              onClick={handlePrintQR}
+              disabled={!qrCodeUrl}>
+              Print
+            </Button>
+            <Button
+              icon={<Download size={18} />}
+              onClick={handleDownloadQR}
+              disabled={!qrCodeUrl}>
+              Download
+            </Button>
+          </>
+        }>
+        <div className="flex flex-col items-center gap-4">
+          {qrLivestockInfo && (
+            <div className="text-center">
+              <p className="text-lg font-semibold text-text-primary">
+                {qrLivestockInfo.tag_id}
+              </p>
+              {qrLivestockInfo.name && (
+                <p className="text-sm text-text-secondary">{qrLivestockInfo.name}</p>
+              )}
+            </div>
+          )}
+          {isLoadingQr ? (
+            <div className="flex flex-col items-center gap-3 py-8">
+              <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <p className="text-sm text-text-secondary">Generating QR Code...</p>
+            </div>
+          ) : qrCodeUrl ? (
+            <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+              <img
+                src={qrCodeUrl}
+                alt={`QR Code for ${qrLivestockInfo?.tag_id}`}
+                className="w-64 h-64 object-contain"
+              />
+            </div>
+          ) : null}
+          <p className="text-xs text-text-secondary text-center max-w-[250px]">
+            Scan this QR code to view the animal's public details
+          </p>
         </div>
       </Modal>
     </DashboardLayout>

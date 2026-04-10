@@ -31,4 +31,11 @@ export const livestockService = {
         const response = await api.get<LivestockStats>('/livestock/stats/summary');
         return response.data;
     },
+
+    async getQRCode(livestockId: string): Promise<string> {
+        const response = await api.get(`/livestock/${livestockId}/qrcode`, {
+            responseType: 'blob',
+        });
+        return URL.createObjectURL(response.data);
+    },
 };
