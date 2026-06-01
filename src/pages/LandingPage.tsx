@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   Leaf,
-  ArrowRight,
   Activity,
   ShieldCheck,
   BarChart3,
@@ -77,23 +76,7 @@ export function LandingPage() {
               solution. Track livestock, manage health records, and optimize
               inventory with ease.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/register">
-                <Button size="lg" className="w-full sm:w-auto">
-                  Start Your Free Trial
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full sm:w-auto">
 
-                  View Demo
-                </Button>
-              </Link>
-            </div>
           </div>
           <div className="relative">
             <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full blur-3xl opacity-50"></div>

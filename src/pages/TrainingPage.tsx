@@ -33,6 +33,28 @@ const filterCategories = [
   { value: 'government_programs', label: 'Government Programs' },
 ];
 
+const getImageUrl = (imagePath: string | null) => {
+  if (!imagePath) return '';
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // Get API base URL, remove trailing slash if any
+  let apiBaseUrl = (import.meta as any).env.VITE_API_URL || 'http://localhost:8000/api';
+  if (apiBaseUrl.endsWith('/')) {
+    apiBaseUrl = apiBaseUrl.slice(0, -1);
+  }
+  
+  // Strip '/api' from the end to get the backend base URL
+  const backendBaseUrl = apiBaseUrl.endsWith('/api') 
+    ? apiBaseUrl.slice(0, -4) 
+    : apiBaseUrl;
+  
+  // Make sure the image path has a leading slash
+  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  return `${backendBaseUrl}${cleanPath}`;
+};
+
 export function TrainingPage() {
   const [activeCategory, setActiveCategory] = useState('');
 
@@ -52,24 +74,51 @@ export function TrainingPage() {
     <DashboardLayout title="Training & Resources">
       {/* Featured Article */}
       <div className="mb-10">
-        <div className="bg-primary rounded-2xl p-8 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-primary-dark via-primary to-primary-light rounded-2xl p-8 lg:p-10 text-white relative overflow-hidden shadow-xl border border-white/5">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
-          <div className="relative z-10 max-w-2xl">
-            <Badge className="bg-white/20 text-white border-none mb-4">
-              Featured Program
-            </Badge>
-            <h2 className="text-3xl font-bold mb-4">
-              {featured?.title || 'Government Livestock Improvement Scheme'}
-            </h2>
-            <p className="text-primary-light text-lg mb-6">
-              {featured?.description ||
-                'Apply for subsidized breeding stock to improve your herd genetics. Applications open for the 2024 season.'}
-            </p>
-            <Button
-              variant="secondary"
-              className="bg-white text-primary hover:bg-gray-100 border-none">
-              Read Full Guide
-            </Button>
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7">
+              <Badge className="bg-white/15 text-white font-bold uppercase tracking-wider text-xs border border-white/10 px-3.5 py-1 mb-4 shadow-sm">
+                Featured Program
+              </Badge>
+              <h2 className="text-3.5xl lg:text-4xl font-extrabold tracking-tight mb-4 leading-tight drop-shadow-sm">
+                {featured?.title || 'Government Livestock Improvement Scheme'}
+              </h2>
+              <p className="text-emerald-50/90 text-lg mb-8 leading-relaxed font-normal">
+                {featured?.description ||
+                  'Apply for subsidized breeding stock to improve your herd genetics. Applications open for the 2024 season.'}
+              </p>
+              
+              {featured?.external_link ? (
+                <a
+                  href={featured.external_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 bg-accent text-white hover:bg-accent-light px-6 py-3.5 font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 outline-none">
+                  Read Full Guide <ExternalLink size={16} />
+                </a>
+              ) : (
+                <button
+                  className="inline-flex items-center justify-center gap-2 bg-accent text-white hover:bg-accent-light px-6 py-3.5 font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 outline-none">
+                  Read Full Guide
+                </button>
+              )}
+            </div>
+            
+            {/* Featured Image */}
+            <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-md h-64 rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center">
+                {featured?.featured_image ? (
+                  <img
+                    src={getImageUrl(featured.featured_image)}
+                    alt={featured.title}
+                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <BookOpen className="w-20 h-20 text-white/20" />
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -106,7 +155,7 @@ export function TrainingPage() {
                   } flex items-center justify-center`}>
                 {resource.featured_image ? (
                   <img
-                    src={resource.featured_image}
+                    src={getImageUrl(resource.featured_image)}
                     alt={resource.title}
                     className="w-full h-full object-cover"
                   />
