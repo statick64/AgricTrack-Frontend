@@ -228,24 +228,30 @@ export interface LivestockSummaryReport {
 export interface HealthReport {
     report_type: string;
     period: { from: string | null; to: string | null };
-    total_health_records: number;
-    conditions: Array<{ condition: string; count: number }>;
-    vaccination_compliance: {
-        completed: number;
-        pending: number;
-        overdue: number;
+    health_records: {
+        total: number;
+        by_condition: Array<{ condition: string; count: number }>;
+    };
+    vaccinations: {
+        total: number;
+        by_status: Array<{ status: string; count: number }>;
     };
 }
 
 export interface InventoryUsageReport {
     report_type: string;
     period: { from: string | null; to: string | null };
-    total_items: number;
-    total_value: number;
-    by_category: Array<{ category: string; count: number }>;
+    items: {
+        total: number;
+        by_category: Array<{ category: string; count: number }>;
+        by_status: Array<{ status: string; count: number }>;
+        low_stock_alerts: Array<{ id: number; item_name: string; quantity: number; unit: string; min_stock_level: number }>;
+    };
     transactions: {
-        additions: number;
-        usage: number;
+        total: number;
+        total_added: string;
+        total_used: string;
+        by_type: Array<{ type: string; count: number }>;
     };
 }
 
@@ -254,6 +260,127 @@ export interface FinancialOverviewReport {
     estimated_livestock_value: number;
     inventory_value: number;
     total_farm_value: number;
+}
+
+// ========================
+// Export Report Types
+// ========================
+
+export interface LivestockExportReport {
+    report_type: string;
+    period: { from: string; to: string };
+    total: number;
+    records: Array<{
+        id: string;
+        tag_id: string;
+        name: string | null;
+        animal_type: string;
+        breed: string;
+        gender: string;
+        date_of_birth: string;
+        age: number;
+        weight: number;
+        status: string;
+        notes: string | null;
+        created_at: string;
+        updated_at: string;
+    }>;
+}
+
+export interface HealthExportReport {
+    report_type: string;
+    period: { from: string; to: string };
+    health_records: {
+        total: number;
+        records: Array<{
+            id: number;
+            animal_tag_id: string;
+            animal_name: string;
+            animal_type: string;
+            date: string;
+            condition: string;
+            treatment: string;
+            veterinarian: string;
+            status: string;
+            notes: string;
+            follow_up_date: string | null;
+            created_at: string;
+        }>;
+    };
+    vaccination_records: {
+        total: number;
+        records: Array<{
+            id: number;
+            animal_tag_id: string;
+            animal_name: string;
+            group_name: string;
+            vaccine_name: string;
+            scheduled_date: string;
+            administered_date: string | null;
+            administered_by: string;
+            batch_number: string;
+            status: string;
+            notes: string;
+            created_at: string;
+        }>;
+    };
+}
+
+export interface InventoryExportReport {
+    report_type: string;
+    period: { from: string; to: string };
+    items: {
+        total: number;
+        records: Array<{
+            id: number;
+            item_name: string;
+            category: string;
+            quantity: number;
+            unit: string;
+            min_stock_level: number;
+            status: string;
+            description: string;
+            supplier: string;
+            cost_per_unit: number;
+            total_value: number;
+            created_at: string;
+            last_updated: string;
+        }>;
+    };
+    transactions: {
+        total: number;
+        records: Array<{ id: number; transaction_type: string; quantity: number; notes: string; transaction_date: string }>;
+    };
+}
+
+export interface FinancialExportReport {
+    report_type: string;
+    period: { from: string; to: string };
+    summary: {
+        total_inventory_value: number;
+        total_addition_cost: number;
+        total_usage_cost: number;
+        net_cost: number;
+    };
+    inventory_valuation: {
+        total: number;
+        records: Array<{
+            id: number;
+            item_name: string;
+            category: string;
+            quantity: number;
+            unit: string;
+            cost_per_unit: number;
+            total_value: number;
+            status: string;
+            supplier: string;
+            last_updated: string;
+        }>;
+    };
+    costed_transactions: {
+        total: number;
+        records: Array<{ id: number; transaction_type: string; quantity: number; notes: string; transaction_date: string }>;
+    };
 }
 
 // ========================
